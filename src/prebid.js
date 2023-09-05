@@ -316,8 +316,9 @@ pbjsInstance.getHighestUnusedBidResponseForAdUnitCode = function (adunitCode) {
  * @alias module:pbjs.getAdserverTargetingForAdUnitCode
  * @returns {Object}  returnObj return bids
  */
-pbjsInstance.getAdserverTargetingForAdUnitCode = function (adUnitCode) {
-  return pbjsInstance.getAdserverTargeting(adUnitCode)[adUnitCode];
+// BIDBARREL-SPEC
+$$PREBID_GLOBAL$$.getAdserverTargetingForAdUnitCode = function (adUnitCode, opts = {forTargeting: false}) {
+  return $$PREBID_GLOBAL$$.getAdserverTargeting(adUnitCode, opts)[adUnitCode];
 };
 
 /**
@@ -326,9 +327,10 @@ pbjsInstance.getAdserverTargetingForAdUnitCode = function (adUnitCode) {
  * @alias module:pbjs.getAdserverTargeting
  */
 
-pbjsInstance.getAdserverTargeting = function (adUnitCode) {
+// BIDBARREL-SPEC
+$$PREBID_GLOBAL$$.getAdserverTargeting = function (adUnitCode, opts = {forTargeting: false}) {
   logInfo('Invoking $$PREBID_GLOBAL$$.getAdserverTargeting', arguments);
-  return targeting.getAllTargeting(adUnitCode);
+  return targeting.getAllTargeting(adUnitCode, targeting.getBidsReceived(), opts);
 };
 
 pbjsInstance.getConsentMetadata = function () {
@@ -416,7 +418,8 @@ pbjsInstance.setTargetingForGPTAsync = function (adUnit, customSlotMatching) {
   }
 
   // get our ad unit codes
-  let targetingSet = targeting.getAllTargeting(adUnit);
+  // BIDBARREL-SPEC
+  let targetingSet = targeting.getAllTargeting(adUnit, targeting.getBidsReceived(), {forTargeting: true});
 
   // first reset any old targeting
   targeting.resetPresetTargeting(adUnit, customSlotMatching);
@@ -547,9 +550,11 @@ pbjsInstance.renderAd = hook('async', function (doc, id, options) {
       const message = `Error trying to write ad. Ad render call ad id ${id} was prevented from writing to the main document.`;
       emitAdRenderFail({reason: PREVENT_WRITING_ON_MAIN_DOCUMENT, message, bid, id});
     } else if (ad) {
+      // BIDBARREL-SPEC
+      setRenderSize(doc, width, height);
       doc.write(ad);
       doc.close();
-      setRenderSize(doc, width, height);
+      // setRenderSize(doc, width, height);
       reinjectNodeIfRemoved(creativeComment, doc, 'html');
       callBurl(bid);
       emitAdRenderSucceeded({ doc, bid, id });
