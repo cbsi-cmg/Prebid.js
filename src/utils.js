@@ -1,6 +1,9 @@
 import {config} from './config.js';
 import clone from 'just-clone';
 import {includes} from './polyfill.js';
+// BIDBARREL-SPEC
+// eslint-disable-next-line prebid/validate-imports
+import {logger as createLogger} from '../../core/utilities/logger.js';
 import CONSTANTS from './constants.json';
 import {GreedyPromise} from './utils/promise.js';
 import {getGlobal} from './prebidGlobal.js';
@@ -33,6 +36,27 @@ function emitEvent(...args) {
   if (eventEmitter != null) {
     eventEmitter(...args);
   }
+}
+/**
+ * Wrappers to console.(log | info | warn | error). Takes N arguments, the same as the native methods
+ */
+// BIDBARREL-SPEC
+const logger = createLogger({name: 'Prebid', bgColor: '#3b88c3', textColor: '#FFF'}).atVerbosity(3);
+function addBidderInfo() {
+  const bidder = config.getCurrentBidder();
+  return (bidder ? `${bidder}: ` : '');
+}
+export const logMessage = function(...args) {
+  logger.logMessage(addBidderInfo(), ...args);
+}
+export const logInfo = function(...args) {
+  logger.logInfo(addBidderInfo(), ...args);
+}
+export const logWarn = function(...args) {
+  logger.logWarn(addBidderInfo(), ...args);
+}
+export const logError = function(...args) {
+  logger.logError(addBidderInfo(), ...args);
 }
 
 // this allows stubbing of utility functions that are used internally by other utility functions
@@ -183,35 +207,35 @@ export function getWindowLocation() {
 /**
  * Wrappers to console.(log | info | warn | error). Takes N arguments, the same as the native methods
  */
-export function logMessage() {
-  if (debugTurnedOn() && consoleLogExists) {
-    // eslint-disable-next-line no-console
-    console.log.apply(console, decorateLog(arguments, 'MESSAGE:'));
-  }
-}
+// export function logMessage() {
+//   if (debugTurnedOn() && consoleLogExists) {
+//     // eslint-disable-next-line no-console
+//     console.log.apply(console, decorateLog(arguments, 'MESSAGE:'));
+//   }
+// }
 
-export function logInfo() {
-  if (debugTurnedOn() && consoleInfoExists) {
-    // eslint-disable-next-line no-console
-    console.info.apply(console, decorateLog(arguments, 'INFO:'));
-  }
-}
+// export function logInfo() {
+//   if (debugTurnedOn() && consoleInfoExists) {
+//     // eslint-disable-next-line no-console
+//     console.info.apply(console, decorateLog(arguments, 'INFO:'));
+//   }
+// }
 
-export function logWarn() {
-  if (debugTurnedOn() && consoleWarnExists) {
-    // eslint-disable-next-line no-console
-    console.warn.apply(console, decorateLog(arguments, 'WARNING:'));
-  }
-  emitEvent(CONSTANTS.EVENTS.AUCTION_DEBUG, {type: 'WARNING', arguments: arguments});
-}
+// export function logWarn() {
+//   if (debugTurnedOn() && consoleWarnExists) {
+//     // eslint-disable-next-line no-console
+//     console.warn.apply(console, decorateLog(arguments, 'WARNING:'));
+//   }
+//   emitEvent(CONSTANTS.EVENTS.AUCTION_DEBUG, {type: 'WARNING', arguments: arguments});
+// }
 
-export function logError() {
-  if (debugTurnedOn() && consoleErrorExists) {
-    // eslint-disable-next-line no-console
-    console.error.apply(console, decorateLog(arguments, 'ERROR:'));
-  }
-  emitEvent(CONSTANTS.EVENTS.AUCTION_DEBUG, {type: 'ERROR', arguments: arguments});
-}
+// export function logError() {
+//   if (debugTurnedOn() && consoleErrorExists) {
+//     // eslint-disable-next-line no-console
+//     console.error.apply(console, decorateLog(arguments, 'ERROR:'));
+//   }
+//   emitEvent(CONSTANTS.EVENTS.AUCTION_DEBUG, {type: 'ERROR', arguments: arguments});
+// }
 
 export function prefixLog(prefix) {
   function decorate(fn) {
@@ -220,29 +244,33 @@ export function prefixLog(prefix) {
     }
   }
   return {
-    logError: decorate(logError),
-    logWarn: decorate(logWarn),
-    logMessage: decorate(logMessage),
-    logInfo: decorate(logInfo),
+    // logError: decorate(logError),
+    // logWarn: decorate(logWarn),
+    // logMessage: decorate(logMessage),
+    // logInfo: decorate(logInfo),
+    logError: logError,
+    logWarn: logWarn,
+    logMessage: logMessage,
+    logInfo: logInfo,
   }
 }
 
-function decorateLog(args, prefix) {
-  args = [].slice.call(args);
-  let bidder = config.getCurrentBidder();
+// function decorateLog(args, prefix) {
+//   args = [].slice.call(args);
+//   let bidder = config.getCurrentBidder();
 
-  prefix && args.unshift(prefix);
-  if (bidder) {
-    args.unshift(label('#aaa'));
-  }
-  args.unshift(label('#3b88c3'));
-  args.unshift('%cPrebid' + (bidder ? `%c${bidder}` : ''));
-  return args;
+//   prefix && args.unshift(prefix);
+//   if (bidder) {
+//     args.unshift(label('#aaa'));
+//   }
+//   args.unshift(label('#3b88c3'));
+//   args.unshift('%cPrebid' + (bidder ? `%c${bidder}` : ''));
+//   return args;
 
-  function label(color) {
-    return `display: inline-block; color: #fff; background: ${color}; padding: 1px 4px; border-radius: 3px;`
-  }
-}
+//   function label(color) {
+//     return `display: inline-block; color: #fff; background: ${color}; padding: 1px 4px; border-radius: 3px;`
+//   }
+// }
 
 export function hasConsoleLogger() {
   return consoleLogExists;
@@ -517,6 +545,20 @@ export function createTrackPixelIframeHtml(url, encodeUri = true, sandbox = '') 
       scrolling="no"
       src="${url}">
     </iframe>`;
+}
+
+export function getValueString(param, val, defaultValue) {
+  if (val === undefined || val === null) {
+    return defaultValue;
+  }
+  if (isStr(val)) {
+    return val;
+  }
+  if (isNumber(val)) {
+    return val.toString();
+  }
+   // BIDBARREL-SPEC
+   logWarn('Unsuported type for param: ' + param + ' required type: String');
 }
 
 export function uniques(value, index, arry) {
