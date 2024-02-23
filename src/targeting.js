@@ -19,8 +19,11 @@ import {NATIVE_TARGETING_KEYS} from './native.js';
 import {auctionManager} from './auctionManager.js';
 import {ADPOD} from './mediaTypes.js';
 import {hook} from './hook.js';
-import {bidderSettings} from './bidderSettings.js';
+// import {bidderSettings} from './bidderSettings.js';
 import {find, includes} from './polyfill.js';
+// BIDBARREL-SPEC
+// eslint-disable-next-line prebid/validate-imports
+import { bidCache } from '../../core/services/bidCache.js';
 import CONSTANTS from './constants.json';
 import {getHighestCpm, getOldestHighestCpmBid} from './utils/reducers.js';
 import {getTTL} from './bidTTL.js';
@@ -261,12 +264,14 @@ export function newTargeting(auctionManager) {
    * @param {string=} adUnitCode
    * @return {Object.<string,targeting>} targeting
    */
-  targeting.getAllTargeting = function(adUnitCode, bidsReceived = getBidsReceived()) {
+   // BIDBARREL-SPEC
+   targeting.getAllTargeting = function(adUnitCode, bidsReceived = getBidsReceived(), opts = {forTargeting: false}) {
     const adUnitCodes = getAdUnitCodes(adUnitCode);
 
     // Get targeting for the winning bid. Add targeting for any bids that have
     // `alwaysUseBid=true`. If sending all bids is enabled, add targeting for losing bids.
-    var targeting = getWinningBidTargeting(adUnitCodes, bidsReceived)
+    // BIDBARREL-SPEC
+      var targeting = getWinningBidTargeting(adUnitCodes, bidsReceived, opts)
       .concat(getCustomBidTargeting(adUnitCodes, bidsReceived))
       .concat(config.getConfig('enableSendAllBids') ? getBidLandscapeTargeting(adUnitCodes, bidsReceived) : getDealBids(adUnitCodes, bidsReceived))
       .concat(getAdUnitTargeting(adUnitCodes));
@@ -476,24 +481,32 @@ export function newTargeting(auctionManager) {
         return bid;
       });
 
-    return getHighestCpmBidsFromBidPool(bidsReceived, getOldestHighestCpmBid);
+     // BIDBARREL-SPEC
+     // return getHighestCpmBidsFromBidPool(bidsReceived, getOldestHighestCpmBid);
+     return bidsReceived;
   }
+  // BIDBARREL-SPEC
+  targeting.getBidsReceived = getBidsReceived;
 
   /**
    * Returns top bids for a given adUnit or set of adUnits.
    * @param  {(string|string[])} adUnitCode adUnitCode or array of adUnitCodes
    * @return {[type]}            [description]
    */
-  targeting.getWinningBids = function(adUnitCode, bidsReceived = getBidsReceived()) {
-    const adUnitCodes = getAdUnitCodes(adUnitCode);
-    return bidsReceived
-      .filter(bid => includes(adUnitCodes, bid.adUnitCode))
-      .filter(bid => (bidderSettings.get(bid.bidderCode, 'allowZeroCpmBids') === true) ? bid.cpm >= 0 : bid.cpm > 0)
-      .map(bid => bid.adUnitCode)
-      .filter(uniques)
-      .map(adUnitCode => bidsReceived
-        .filter(bid => bid.adUnitCode === adUnitCode ? bid : null)
-        .reduce(getHighestCpm));
+   // BIDBARREL-SPEC
+   targeting.getWinningBids = function(adUnitCode, bidsReceived = getBidsReceived(), evalOptions = {forTargeting: false}) {
+    let adUnitCodes = getAdUnitCodes(adUnitCode);
+    return bidCache.evaluateWinningBids(adUnitCodes, bidsReceived, evalOptions);
+    // targeting.getWinningBids = function(adUnitCode, bidsReceived = getBidsReceived()) {
+    // const adUnitCodes = getAdUnitCodes(adUnitCode);
+    // return bidsReceived
+    //   .filter(bid => includes(adUnitCodes, bid.adUnitCode))
+    //   .filter(bid => (bidderSettings.get(bid.bidderCode, 'allowZeroCpmBids') === true) ? bid.cpm >= 0 : bid.cpm > 0)
+    //   .map(bid => bid.adUnitCode)
+    //   .filter(uniques)
+    //   .map(adUnitCode => bidsReceived
+    //     .filter(bid => bid.adUnitCode === adUnitCode ? bid : null)
+    //     .reduce(getHighestCpm));
   };
 
   /**
@@ -533,8 +546,11 @@ export function newTargeting(auctionManager) {
    * @param {string[]}    adUnitCodes code array
    * @return {targetingArray}   winning bids targeting
    */
-  function getWinningBidTargeting(adUnitCodes, bidsReceived) {
-    let winners = targeting.getWinningBids(adUnitCodes, bidsReceived);
+   // BIDBARREL-SPEC
+   function getWinningBidTargeting(adUnitCodes, bidsReceived, opts = {forTargeting: false}) {
+    let winners = targeting.getWinningBids(adUnitCodes, bidsReceived, opts);
+    // function getWinningBidTargeting(adUnitCodes, bidsReceived) {
+    //   let winners = targeting.getWinningBids(adUnitCodes, bidsReceived);
     let standardKeys = getStandardKeys();
 
     winners = winners.map(winner => {
