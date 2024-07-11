@@ -599,6 +599,8 @@ export const requestBidsHook = timedAuctionHook('userId', function requestBidsHo
     // pass available user id data to bid adapters
     addIdDataToAdUnitBids(reqBidsConfigObj.adUnits || getGlobal().adUnits, initializedSubmodules);
     uidMetrics().join(useMetrics(reqBidsConfigObj.metrics), {propagate: false, includeGroups: true});
+    // BIDBARREL-SPEC
+    events.emit(CONSTANTS.EVENTS.USERIDS_ADDED, reqBidsConfigObj.adUnits, initializedSubmodules);
     // calling fn allows prebid to continue processing
     fn.call(this, reqBidsConfigObj);
   });
