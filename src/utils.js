@@ -250,21 +250,21 @@ export function canAccessWindowTop() {
 //   }
 // }
 
-export function logWarn() {
-  if (debugTurnedOn() && consoleWarnExists) {
-    // eslint-disable-next-line no-console
-    console.warn.apply(console, decorateLog(arguments, 'WARNING:'));
-  }
-  emitEvent(CONSTANTS.EVENTS.AUCTION_DEBUG, {type: 'WARNING', arguments: arguments});
-}
+// export function logWarn() {
+//   if (debugTurnedOn() && consoleWarnExists) {
+//     // eslint-disable-next-line no-console
+//     console.warn.apply(console, decorateLog(arguments, 'WARNING:'));
+//   }
+//   emitEvent(CONSTANTS.EVENTS.AUCTION_DEBUG, {type: 'WARNING', arguments: arguments});
+// }
 
-export function logError() {
-  if (debugTurnedOn() && consoleErrorExists) {
-    // eslint-disable-next-line no-console
-    console.error.apply(console, decorateLog(arguments, 'ERROR:'));
-  }
-  emitEvent(CONSTANTS.EVENTS.AUCTION_DEBUG, {type: 'ERROR', arguments: arguments});
-}
+// export function logError() {
+//   if (debugTurnedOn() && consoleErrorExists) {
+//     // eslint-disable-next-line no-console
+//     console.error.apply(console, decorateLog(arguments, 'ERROR:'));
+//   }
+//   emitEvent(CONSTANTS.EVENTS.AUCTION_DEBUG, {type: 'ERROR', arguments: arguments});
+// }
 
 export function prefixLog(prefix) {
   function decorate(fn) {
