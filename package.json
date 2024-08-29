@@ -38,8 +38,8 @@
     "prebid"
   ],
   "globalVarName": "pbjs",
-  "defineGlobal": true,
-  "author": "The prebid.js contributors",
+  "defineGlobal": "1",
+  "author": "the prebid.js contributors",
   "license": "Apache-2.0",
   "engines": {
     "node": ">=20.0.0"
@@ -68,7 +68,6 @@
     "eslint-plugin-import": "^2.20.2",
     "eslint-plugin-jsdoc": "^48.5.0",
     "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-prebid": "file:./plugins/eslint",
     "eslint-plugin-promise": "^5.1.0",
     "eslint-plugin-standard": "^3.0.1",
     "execa": "^1.0.0",

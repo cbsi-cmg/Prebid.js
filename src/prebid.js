@@ -326,8 +326,9 @@ pbjsInstance.getHighestUnusedBidResponseForAdUnitCode = function (adunitCode) {
  * @alias module:pbjs.getAdserverTargetingForAdUnitCode
  * @returns {Object}  returnObj return bids
  */
-pbjsInstance.getAdserverTargetingForAdUnitCode = function (adUnitCode) {
-  return pbjsInstance.getAdserverTargeting(adUnitCode)[adUnitCode];
+// BIDBARREL-SPEC
+$$PREBID_GLOBAL$$.getAdserverTargetingForAdUnitCode = function (adUnitCode, opts = {forTargeting: false}) {
+  return $$PREBID_GLOBAL$$.getAdserverTargeting(adUnitCode, opts)[adUnitCode];
 };
 
 /**
@@ -336,9 +337,10 @@ pbjsInstance.getAdserverTargetingForAdUnitCode = function (adUnitCode) {
  * @alias module:pbjs.getAdserverTargeting
  */
 
-pbjsInstance.getAdserverTargeting = function (adUnitCode) {
+// BIDBARREL-SPEC
+$$PREBID_GLOBAL$$.getAdserverTargeting = function (adUnitCode, opts = {forTargeting: false}) {
   logInfo('Invoking $$PREBID_GLOBAL$$.getAdserverTargeting', arguments);
-  return targeting.getAllTargeting(adUnitCode);
+  return targeting.getAllTargeting(adUnitCode, targeting.getBidsReceived(), opts);
 };
 
 pbjsInstance.getConsentMetadata = function () {
