@@ -46,6 +46,8 @@ export const EVENTS = {
   PAAPI_BID: 'paapiBid',
   PAAPI_NO_BID: 'paapiNoBid',
   PAAPI_ERROR: 'paapiError',
+  // BIDBARREL-SPEC
+  USERIDS_ADDED: 'userIdsAdded',
 };
 
 export const AD_RENDER_FAILED_REASON = {
