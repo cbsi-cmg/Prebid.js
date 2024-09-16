@@ -42,6 +42,7 @@ export const EVENTS = {
   STALE_RENDER: 'staleRender',
   BILLABLE_EVENT: 'billableEvent',
   BID_ACCEPTED: 'bidAccepted',
+  USERIDS_ADDED: 'userIdAdded',
   RUN_PAAPI_AUCTION: 'paapiRunAuction',
   PAAPI_BID: 'paapiBid',
   PAAPI_NO_BID: 'paapiNoBid',
