@@ -1,6 +1,9 @@
 import {config} from './config.js';
 import clone from 'just-clone';
 import {includes} from './polyfill.js';
+// BIDBARREL-SPEC
+// eslint-disable-next-line prebid/validate-imports
+import {logger as createLogger} from '../../core/utilities/logger.js';
 import CONSTANTS from './constants.json';
 import {GreedyPromise} from './utils/promise.js';
 import {getGlobal} from './prebidGlobal.js';
@@ -34,6 +37,28 @@ function emitEvent(...args) {
     eventEmitter(...args);
   }
 }
+/**
+ * Wrappers to console.(log | info | warn | error). Takes N arguments, the same as the native methods
+ */
+// BIDBARREL-SPEC
+const logger = createLogger({name: 'Prebid', bgColor: '#3b88c3', textColor: '#FFF'}).atVerbosity(3);
+function addBidderInfo() {
+  const bidder = config.getCurrentBidder();
+  return (bidder ? `${bidder}: ` : '');
+}
+export const logMessage = function(...args) {
+  logger.logMessage(addBidderInfo(), ...args);
+}
+export const logInfo = function(...args) {
+  logger.logInfo(addBidderInfo(), ...args);
+}
+export const logWarn = function(...args) {
+  logger.logWarn(addBidderInfo(), ...args);
+}
+export const logError = function(...args) {
+  logger.logError(addBidderInfo(), ...args);
+}
+
 
 // this allows stubbing of utility functions that are used internally by other utility functions
 export const internal = {
