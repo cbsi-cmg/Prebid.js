@@ -208,35 +208,36 @@ export function getWindowLocation() {
 /**
  * Wrappers to console.(log | info | warn | error). Takes N arguments, the same as the native methods
  */
-export function logMessage() {
-  if (debugTurnedOn() && consoleLogExists) {
-    // eslint-disable-next-line no-console
-    console.log.apply(console, decorateLog(arguments, 'MESSAGE:'));
-  }
-}
+// BIDBARREL-SPEC
+// export function logMessage() {
+//   if (debugTurnedOn() && consoleLogExists) {
+//     // eslint-disable-next-line no-console
+//     console.log.apply(console, decorateLog(arguments, 'MESSAGE:'));
+//   }
+// }
 
-export function logInfo() {
-  if (debugTurnedOn() && consoleInfoExists) {
-    // eslint-disable-next-line no-console
-    console.info.apply(console, decorateLog(arguments, 'INFO:'));
-  }
-}
+// export function logInfo() {
+//   if (debugTurnedOn() && consoleInfoExists) {
+//     // eslint-disable-next-line no-console
+//     console.info.apply(console, decorateLog(arguments, 'INFO:'));
+//   }
+// }
 
-export function logWarn() {
-  if (debugTurnedOn() && consoleWarnExists) {
-    // eslint-disable-next-line no-console
-    console.warn.apply(console, decorateLog(arguments, 'WARNING:'));
-  }
-  emitEvent(CONSTANTS.EVENTS.AUCTION_DEBUG, {type: 'WARNING', arguments: arguments});
-}
+// export function logWarn() {
+//   if (debugTurnedOn() && consoleWarnExists) {
+//     // eslint-disable-next-line no-console
+//     console.warn.apply(console, decorateLog(arguments, 'WARNING:'));
+//   }
+//   emitEvent(CONSTANTS.EVENTS.AUCTION_DEBUG, {type: 'WARNING', arguments: arguments});
+// }
 
-export function logError() {
-  if (debugTurnedOn() && consoleErrorExists) {
-    // eslint-disable-next-line no-console
-    console.error.apply(console, decorateLog(arguments, 'ERROR:'));
-  }
-  emitEvent(CONSTANTS.EVENTS.AUCTION_DEBUG, {type: 'ERROR', arguments: arguments});
-}
+// export function logError() {
+//   if (debugTurnedOn() && consoleErrorExists) {
+//     // eslint-disable-next-line no-console
+//     console.error.apply(console, decorateLog(arguments, 'ERROR:'));
+//   }
+//   emitEvent(CONSTANTS.EVENTS.AUCTION_DEBUG, {type: 'ERROR', arguments: arguments});
+// }
 
 export function prefixLog(prefix) {
   function decorate(fn) {
@@ -245,29 +246,34 @@ export function prefixLog(prefix) {
     }
   }
   return {
-    logError: decorate(logError),
-    logWarn: decorate(logWarn),
-    logMessage: decorate(logMessage),
-    logInfo: decorate(logInfo),
+    // BIDBARREL-SPEC
+    // logError: decorate(logError),
+    // logWarn: decorate(logWarn),
+    // logMessage: decorate(logMessage),
+    // logInfo: decorate(logInfo),
+    logError: logError,
+    logWarn: logWarn,
+    logMessage: logMessage,
+    logInfo: logInfo,
   }
 }
+// BIDBARREL-SPEC
+// function decorateLog(args, prefix) {
+//   args = [].slice.call(args);
+//   let bidder = config.getCurrentBidder();
 
-function decorateLog(args, prefix) {
-  args = [].slice.call(args);
-  let bidder = config.getCurrentBidder();
+//   prefix && args.unshift(prefix);
+//   if (bidder) {
+//     args.unshift(label('#aaa'));
+//   }
+//   args.unshift(label('#3b88c3'));
+//   args.unshift('%cPrebid' + (bidder ? `%c${bidder}` : ''));
+//   return args;
 
-  prefix && args.unshift(prefix);
-  if (bidder) {
-    args.unshift(label('#aaa'));
-  }
-  args.unshift(label('#3b88c3'));
-  args.unshift('%cPrebid' + (bidder ? `%c${bidder}` : ''));
-  return args;
-
-  function label(color) {
-    return `display: inline-block; color: #fff; background: ${color}; padding: 1px 4px; border-radius: 3px;`
-  }
-}
+//   function label(color) {
+//     return `display: inline-block; color: #fff; background: ${color}; padding: 1px 4px; border-radius: 3px;`
+//   }
+// }
 
 export function hasConsoleLogger() {
   return consoleLogExists;
@@ -542,6 +548,20 @@ export function createTrackPixelIframeHtml(url, encodeUri = true, sandbox = '') 
       scrolling="no"
       src="${url}">
     </iframe>`;
+}
+
+export function getValueString(param, val, defaultValue) {
+  if (val === undefined || val === null) {
+    return defaultValue;
+  }
+  if (isStr(val)) {
+    return val;
+  }
+  if (isNumber(val)) {
+    return val.toString();
+  }
+   // BIDBARREL-SPEC
+   logWarn('Unsuported type for param: ' + param + ' required type: String');
 }
 
 export function uniques(value, index, arry) {
