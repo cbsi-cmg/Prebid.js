@@ -1,6 +1,7 @@
 // if $$PREBID_GLOBAL$$ already exists in global document scope, use it, if not, create the object
 // global defination should happen BEFORE imports to avoid global undefined errors.
 /* global $$DEFINE_PREBID_GLOBAL$$ */
+// BIDBARREL-SPEC
 const scope = !($$DEFINE_PREBID_GLOBAL$$==1) ? {} : window;
 const global = scope.$$PREBID_GLOBAL$$ = scope.$$PREBID_GLOBAL$$ || {};
 global.cmd = global.cmd || [];
