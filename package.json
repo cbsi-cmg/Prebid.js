@@ -38,6 +38,7 @@
     "prebid"
   ],
   "globalVarName": "pbjs",
+  "bidbarrel-spec-note1": "// BIDBARREL-SPEC",
   "defineGlobal": "1",
   "author": "the prebid.js contributors",
   "license": "Apache-2.0",
