@@ -41,7 +41,7 @@ function emitEvent(...args) {
 /**
  * Wrappers to console.(log | info | warn | error). Takes N arguments, the same as the native methods
  */
-// BIDBARREL-SPEC
+// BIDBARREL-SPEC Override logger functions and add to internal
 const logger = createLogger({name: 'Prebid', bgColor: '#3b88c3', textColor: '#FFF'}).atVerbosity(3);
 function addBidderInfo() {
   const bidder = config.getCurrentBidder();
@@ -55,9 +55,11 @@ export const logInfo = function(...args) {
 }
 export const logWarn = function(...args) {
   logger.logWarn(addBidderInfo(), ...args);
+  emitEvent(EVENTS.AUCTION_DEBUG, {type: 'WARNING', arguments: arguments});
 }
 export const logError = function(...args) {
   logger.logError(addBidderInfo(), ...args);
+  emitEvent(EVENTS.AUCTION_DEBUG, { type: 'ERROR', arguments: arguments });
 }
 
 // this allows stubbing of utility functions that are used internally by other utility functions
@@ -234,6 +236,7 @@ export function canAccessWindowTop() {
   }
 }
 
+// BIDBARREL-SPEC
 /**
  * Wrappers to console.(log | info | warn | error). Takes N arguments, the same as the native methods
  */
@@ -256,7 +259,7 @@ export function canAccessWindowTop() {
 //     // eslint-disable-next-line no-console
 //     console.warn.apply(console, decorateLog(arguments, 'WARNING:'));
 //   }
-//   emitEvent(CONSTANTS.EVENTS.AUCTION_DEBUG, {type: 'WARNING', arguments: arguments});
+//   emitEvent(EVENTS.AUCTION_DEBUG, { type: 'WARNING', arguments: arguments });
 // }
 
 // export function logError() {
@@ -264,7 +267,7 @@ export function canAccessWindowTop() {
 //     // eslint-disable-next-line no-console
 //     console.error.apply(console, decorateLog(arguments, 'ERROR:'));
 //   }
-//   emitEvent(CONSTANTS.EVENTS.AUCTION_DEBUG, {type: 'ERROR', arguments: arguments});
+//   emitEvent(EVENTS.AUCTION_DEBUG, { type: 'ERROR', arguments: arguments });
 // }
 
 export function prefixLog(prefix) {
@@ -600,20 +603,6 @@ export function createTrackPixelIframeHtml(url, encodeUri = true, sandbox = '') 
       scrolling="no"
       src="${url}">
     </iframe>`;
-}
-
-export function getValueString(param, val, defaultValue) {
-  if (val === undefined || val === null) {
-    return defaultValue;
-  }
-  if (isStr(val)) {
-    return val;
-  }
-  if (isNumber(val)) {
-    return val.toString();
-  }
-   // BIDBARREL-SPEC
-   logWarn('Unsuported type for param: ' + param + ' required type: String');
 }
 
 export function uniques(value, index, arry) {

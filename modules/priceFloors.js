@@ -131,10 +131,6 @@ function enumeratePossibleFieldValues(floorFields, bidObject, responseObject) {
   // generate combination of all exact matches and catch all for each field type
   return floorFields.reduce((accum, field) => {
     let exactMatch = fieldMatchingFunctions[field](bidObject, responseObject) || '*';
-     // BIDBARREL-SPEC
-     if (typeof exactMatch !== 'string') {
-      exactMatch = '*';
-    }
     // storing exact matches as lowerCase since we want to compare case insensitively
     accum.push(exactMatch === '*' ? ['*'] : [exactMatch.toLowerCase(), '*']);
     return accum;
