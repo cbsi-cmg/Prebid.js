@@ -33,6 +33,9 @@ import {
   uniques,
 } from './utils.js';
 import { getHighestCpm, getOldestHighestCpmBid } from './utils/reducers.js';
+// BIDBARREL-SPEC  import file to override getWinningBids
+// eslint-disable-next-line prebid/validate-imports
+import { bidCache } from '../../core/services/bidCache.js';
 
 var pbTargetingKeys = [];
 
@@ -525,16 +528,19 @@ export function newTargeting(auctionManager) {
    * @param  {Array} [bidsReceived=getBidsReceived()] - The received bids, defaulting to the result of getBidsReceived().
    * @return {Array<Object>} - An array of winning bids.
    */
-  targeting.getWinningBids = function(adUnitCode, bidsReceived = getBidsReceived()) {
+    // BIDBARREL-SPEC
+  targeting.getWinningBids = function(adUnitCode, bidsReceived = getBidsReceived(), evalOptions = {forTargeting: false}) {
     const adUnitCodes = getAdUnitCodes(adUnitCode);
-    return bidsReceived
-      .filter(bid => includes(adUnitCodes, bid.adUnitCode))
-      .filter(bid => (bidderSettings.get(bid.bidderCode, 'allowZeroCpmBids') === true) ? bid.cpm >= 0 : bid.cpm > 0)
-      .map(bid => bid.adUnitCode)
-      .filter(uniques)
-      .map(adUnitCode => bidsReceived
-        .filter(bid => bid.adUnitCode === adUnitCode ? bid : null)
-        .reduce(getHighestCpm));
+    // BIDBARREL-SPEC
+    // return bidsReceived
+    //   .filter(bid => includes(adUnitCodes, bid.adUnitCode))
+    //   .filter(bid => (bidderSettings.get(bid.bidderCode, 'allowZeroCpmBids') === true) ? bid.cpm >= 0 : bid.cpm > 0)
+    //   .map(bid => bid.adUnitCode)
+    //   .filter(uniques)
+    //   .map(adUnitCode => bidsReceived
+    //     .filter(bid => bid.adUnitCode === adUnitCode ? bid : null)
+    //     .reduce(getHighestCpm));
+    return bidCache.evaluateWinningBids(adUnitCodes, bidsReceived, evalOptions);
   };
 
   /**
