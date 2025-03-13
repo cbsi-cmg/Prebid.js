@@ -80,7 +80,7 @@ module.exports = {
     'jsdoc/require-yields-check': 'off',
     'jsdoc/tag-lines': 'off'
   }
-    // BIDBARREL-SPEC
+    // BIDBARREL-SPEC commented out because the rules play havoc with VSCode's ESLint plugin
   // ,
   // overrides: Object.keys(allowedModules).map((key) => ({
   //   files: key + '/**/*.js',

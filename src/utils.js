@@ -1,7 +1,7 @@
 import {config} from './config.js';
 import {klona} from 'klona/json';
 import {includes} from './polyfill.js';
-// BIDBARREL-SPEC
+// BIDBARREL-SPEC  add BB logger to unify logging messages
 // eslint-disable-next-line prebid/validate-imports
 import {logger as createLogger} from '../../core/utilities/logger.js';
 import {EVENTS} from './constants.js';
@@ -41,7 +41,7 @@ function emitEvent(...args) {
 /**
  * Wrappers to console.(log | info | warn | error). Takes N arguments, the same as the native methods
  */
-// BIDBARREL-SPEC Override logger functions and add to internal
+// BIDBARREL-SPEC Override logger functions and add to console
 const logger = createLogger({name: 'Prebid', bgColor: '#3b88c3', textColor: '#FFF'}).atVerbosity(3);
 function addBidderInfo() {
   const bidder = config.getCurrentBidder();
@@ -236,7 +236,7 @@ export function canAccessWindowTop() {
   }
 }
 
-// BIDBARREL-SPEC
+// BIDBARREL-SPEC comment out Prebid.js functions for log errors in favor of BB log functions above
 /**
  * Wrappers to console.(log | info | warn | error). Takes N arguments, the same as the native methods
  */
@@ -277,6 +277,8 @@ export function prefixLog(prefix) {
     }
   }
   return {
+
+    // BIDBARREL-SPEC comment out Prebid.js functions for log errors in favor of BB log functions below
     // logError: decorate(logError),
     // logWarn: decorate(logWarn),
     // logMessage: decorate(logMessage),
@@ -288,6 +290,7 @@ export function prefixLog(prefix) {
   }
 }
 
+// BIDBARREL-SPEC comment out Prebid.js function decorateLog in favor of BB log functions above
 // function decorateLog(args, prefix) {
 //   args = [].slice.call(args);
 //   let bidder = config.getCurrentBidder();

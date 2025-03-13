@@ -48,7 +48,7 @@ export const EVENTS = {
   PAAPI_BID: 'paapiBid',
   PAAPI_NO_BID: 'paapiNoBid',
   PAAPI_ERROR: 'paapiError',
-  // BIDBARREL-SPEC
+  // BIDBARREL-SPEC add constants for USERIDS_ADDED event
   USERIDS_ADDED: 'userIdsAdded',
 };
 
