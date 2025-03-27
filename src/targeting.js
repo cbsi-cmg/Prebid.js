@@ -34,6 +34,9 @@ import {
   uniques,
 } from './utils.js';
 import { getHighestCpm, getOldestHighestCpmBid } from './utils/reducers.js';
+// BIDBARREL-SPEC  import file to override getWinningBids
+// eslint-disable-next-line prebid/validate-imports
+import { bidCache } from '../../core/services/bidCache.js';
 
 var pbTargetingKeys = [];
 
@@ -282,7 +285,9 @@ export function newTargeting(auctionManager) {
    * @param {string=} adUnitCode
    * @return {Object.<string,targeting>} targeting
    */
-  targeting.getAllTargeting = function(adUnitCode, bidLimit, bidsReceived, winReducer = getHighestCpm, winSorter = sortByHighestCpm) {
+  // BIDBARREL-SPEC added arg opts to getAllTargeting
+  // targeting.getAllTargeting = function(adUnitCode, bidLimit, bidsReceived, winReducer = getHighestCpm, winSorter = sortByHighestCpm) {
+  targeting.getAllTargeting = function(adUnitCode, bidLimit, bidsReceived, winReducer = getHighestCpm, winSorter = sortByHighestCpm, opts = {forTargeting: false}) {
     bidsReceived ||= getBidsReceived(winReducer, winSorter);
     const adUnitCodes = getAdUnitCodes(adUnitCode);
     const sendAllBids = config.getConfig('enableSendAllBids');
@@ -290,7 +295,9 @@ export function newTargeting(auctionManager) {
     const adUnitBidLimit = (sendAllBids && (bidLimit || bidLimitConfigValue)) || 0;
     const { customKeysByUnit, filteredBids } = getfilteredBidsAndCustomKeys(adUnitCodes, bidsReceived);
     const bidsSorted = getHighestCpmBidsFromBidPool(filteredBids, winReducer, adUnitBidLimit, undefined, winSorter);
-    let targeting = getTargetingLevels(bidsSorted, customKeysByUnit, adUnitCodes);
+    // BIDBARREL-SPEC added arg opts to pass to getTargetingLevels
+    // let targeting = getTargetingLevels(bidsSorted, customKeysByUnit, adUnitCodes);
+    let targeting = getTargetingLevels(bidsSorted, customKeysByUnit, adUnitCodes, opts);
 
     const defaultKeys = Object.keys(Object.assign({}, DEFAULT_TARGETING_KEYS, NATIVE_KEYS));
     let allowedKeys = config.getConfig(CFG_ALLOW_TARGETING_KEYS);
@@ -337,8 +344,12 @@ export function newTargeting(auctionManager) {
     });
   }
 
-  function getTargetingLevels(bidsSorted, customKeysByUnit, adUnitCodes) {
-    const targeting = getWinningBidTargeting(bidsSorted, adUnitCodes)
+  // BIDBARREL-SPEC added arg opts getTargetingLevels
+  // function getTargetingLevels(bidsSorted, customKeysByUnit, adUnitCodes) {
+  function getTargetingLevels(bidsSorted, customKeysByUnit, adUnitCodes, opts) {
+    // BIDBARREL-SPEC added arg opts to pass to getWinningBidTargeting
+    // const targeting = getWinningBidTargeting(bidsSorted, adUnitCodes)
+    const targeting = getWinningBidTargeting(bidsSorted, adUnitCodes, opts)
       .concat(getCustomBidTargeting(bidsSorted, customKeysByUnit))
       .concat(getBidderTargeting(bidsSorted))
       .concat(getAdUnitTargeting(adUnitCodes));
@@ -556,8 +567,12 @@ export function newTargeting(auctionManager) {
       return bids;
     }, []);
 
-    return getHighestCpmBidsFromBidPool(bidsReceived, winReducer, undefined, undefined, undefined, winSorter);
+    // BIDBARREL-SPEC return bidsReceived instead of calling getHighestcpmbidsfrombidpool so that bid cache module can calculate bids
+    // return getHighestCpmBidsFromBidPool(bidsReceived, winReducer, undefined, undefined, undefined, winSorter);
+    return bidsReceived;
   }
+  // BIDBARREL-SPEC save getBidsReceived function to targeting module
+  targeting.getBidsReceived = getBidsReceived;
 
   /**
    * Returns top bids for a given adUnit or set of adUnits.
@@ -567,18 +582,22 @@ export function newTargeting(auctionManager) {
    * @param  {function(Array<Object>): Array<Object>} [winSorter = sortByHighestCpm] - sorter method
    * @return {Array<Object>} - An array of winning bids.
    */
-  targeting.getWinningBids = function(adUnitCode, bids, winReducer = getHighestCpm, winSorter = sortByHighestCpm) {
+  // BIDBARREL-SPEC pass in evalOptions and call the bidCache function
+  // targeting.getWinningBids = function(adUnitCode, bids, winReducer = getHighestCpm, winSorter = sortByHighestCpm) {
+  targeting.getWinningBids = function(adUnitCode, bids, winReducer = getHighestCpm, winSorter = sortByHighestCpm, evalOptions = {forTargeting: false}) {
     const bidsReceived = bids || getBidsReceived(winReducer, winSorter);
     const adUnitCodes = getAdUnitCodes(adUnitCode);
 
-    return bidsReceived
-      .filter(bid => includes(adUnitCodes, bid.adUnitCode))
-      .filter(bid => (bidderSettings.get(bid.bidderCode, 'allowZeroCpmBids') === true) ? bid.cpm >= 0 : bid.cpm > 0)
-      .map(bid => bid.adUnitCode)
-      .filter(uniques)
-      .map(adUnitCode => bidsReceived
-        .filter(bid => bid.adUnitCode === adUnitCode ? bid : null)
-        .reduce(getHighestCpm));
+    // BIDBARREL-SPEC commented out code to use bidCache module instead
+    // return bidsReceived
+    //   .filter(bid => includes(adUnitCodes, bid.adUnitCode))
+    //   .filter(bid => (bidderSettings.get(bid.bidderCode, 'allowZeroCpmBids') === true) ? bid.cpm >= 0 : bid.cpm > 0)
+    //   .map(bid => bid.adUnitCode)
+    //   .filter(uniques)
+    //   .map(adUnitCode => bidsReceived
+    //     .filter(bid => bid.adUnitCode === adUnitCode ? bid : null)
+    //     .reduce(getHighestCpm));
+    return bidCache.evaluateWinningBids(adUnitCodes, bidsReceived, evalOptions);
   };
 
   /**
@@ -619,8 +638,12 @@ export function newTargeting(auctionManager) {
    * @param {string[]} adUnitCodes code array
    * @return {targetingArray} winning bids targeting
    */
-  function getWinningBidTargeting(bidsReceived, adUnitCodes) {
-    let winners = targeting.getWinningBids(adUnitCodes, bidsReceived);
+  // BIDBARREL-SPEC added arg opts to getWinningBidTargeting
+  // function getWinningBidTargeting(bidsReceived, adUnitCodes) {
+  function getWinningBidTargeting(adUnitCodes, bidsReceived, opts = {forTargeting: false}) {
+    // BIDBARREL-SPEC added arg opts to pass to getWinningBids
+    // let winners = targeting.getWinningBids(adUnitCodes, bidsReceived);
+    let winners = targeting.getWinningBids(adUnitCodes, bidsReceived, opts);
     let standardKeys = getStandardKeys();
 
     winners = winners.map(winner => {
