@@ -40,6 +40,7 @@
   "globalVarName": "pbjs",
   "bidbarrel-spec-note1": "// BIDBARREL-SPEC Add defineGlobal to fix build issue for BB ",
   "defineGlobal": "1",
+  "author": "The prebid.js contributors",   
   "license": "Apache-2.0",
   "engines": {
     "node": ">=20.0.0"
