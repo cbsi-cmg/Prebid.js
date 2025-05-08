@@ -532,15 +532,15 @@ export function newTargeting(auctionManager) {
   targeting.getWinningBids = function(adUnitCode, bidsReceived = getBidsReceived(), evalOptions = {forTargeting: false}) {
     const adUnitCodes = getAdUnitCodes(adUnitCode);
     // BIDBARREL-SPEC
-    // return bidsReceived
-    //   .filter(bid => includes(adUnitCodes, bid.adUnitCode))
-    //   .filter(bid => (bidderSettings.get(bid.bidderCode, 'allowZeroCpmBids') === true) ? bid.cpm >= 0 : bid.cpm > 0)
-    //   .map(bid => bid.adUnitCode)
-    //   .filter(uniques)
-    //   .map(adUnitCode => bidsReceived
-    //     .filter(bid => bid.adUnitCode === adUnitCode ? bid : null)
-    //     .reduce(getHighestCpm));
-    return bidCache.evaluateWinningBids(adUnitCodes, bidsReceived, evalOptions);
+    return bidsReceived
+      .filter(bid => includes(adUnitCodes, bid.adUnitCode))
+      .filter(bid => (bidderSettings.get(bid.bidderCode, 'allowZeroCpmBids') === true) ? bid.cpm >= 0 : bid.cpm > 0)
+      .map(bid => bid.adUnitCode)
+      .filter(uniques)
+      .map(adUnitCode => bidsReceived
+        .filter(bid => bid.adUnitCode === adUnitCode ? bid : null)
+        .reduce(getHighestCpm));
+    //return bidCache.evaluateWinningBids(adUnitCodes, bidsReceived, evalOptions);
   };
 
   /**
