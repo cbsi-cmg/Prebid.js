@@ -588,16 +588,16 @@ export function newTargeting(auctionManager) {
     const bidsReceived = bids || getBidsReceived(winReducer, winSorter);
     const adUnitCodes = getAdUnitCodes(adUnitCode);
 
-    // BIDBARREL-SPEC commented out code to use bidCache module instead
-    // return bidsReceived
-    //   .filter(bid => includes(adUnitCodes, bid.adUnitCode))
-    //   .filter(bid => (bidderSettings.get(bid.bidderCode, 'allowZeroCpmBids') === true) ? bid.cpm >= 0 : bid.cpm > 0)
-    //   .map(bid => bid.adUnitCode)
-    //   .filter(uniques)
-    //   .map(adUnitCode => bidsReceived
-    //     .filter(bid => bid.adUnitCode === adUnitCode ? bid : null)
-    //     .reduce(getHighestCpm));
-    return bidCache.evaluateWinningBids(adUnitCodes, bidsReceived, evalOptions);
+    // BIDBARREL-SPEC commented out bidCache module for now
+    return bidsReceived
+      .filter(bid => includes(adUnitCodes, bid.adUnitCode))
+      .filter(bid => (bidderSettings.get(bid.bidderCode, 'allowZeroCpmBids') === true) ? bid.cpm >= 0 : bid.cpm > 0)
+      .map(bid => bid.adUnitCode)
+      .filter(uniques)
+      .map(adUnitCode => bidsReceived
+        .filter(bid => bid.adUnitCode === adUnitCode ? bid : null)
+        .reduce(getHighestCpm));
+    // return bidCache.evaluateWinningBids(adUnitCodes, bidsReceived, evalOptions);
   };
 
   /**
