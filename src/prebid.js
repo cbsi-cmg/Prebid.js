@@ -402,8 +402,11 @@ pbjsInstance.getHighestUnusedBidResponseForAdUnitCode = function (adunitCode) {
  * @alias module:pbjs.getAdserverTargetingForAdUnitCode
  * @returns {Object}  returnObj return bids
  */
-pbjsInstance.getAdserverTargetingForAdUnitCode = function (adUnitCode) {
-  return pbjsInstance.getAdserverTargeting(adUnitCode)[adUnitCode];
+// BIDBARREL-SPEC ::: adding opts param
+pbjsInstance.getAdserverTargetingForAdUnitCode = function (adUnitCode, opts = {forTargeting: false}) {
+  // BIDBARREL-SPEC ::: adding opts param
+  return targeting.getAllTargeting(adUnitCode, undefined, targeting.getBidsReceived(), undefined, undefined, opts);
+  //return pbjsInstance.getAdserverTargeting(adUnitCode)[adUnitCode];
 };
 
 /**
@@ -411,10 +414,12 @@ pbjsInstance.getAdserverTargetingForAdUnitCode = function (adUnitCode) {
  * @return {Object} Map of adUnitCodes and targeting values []
  * @alias module:pbjs.getAdserverTargeting
  */
-
-pbjsInstance.getAdserverTargeting = function (adUnitCode) {
+// BIDBARREL-SPEC ::: adding opts param
+pbjsInstance.getAdserverTargeting = function (adUnitCode, opts = {forTargeting: false}) {
   logInfo('Invoking $$PREBID_GLOBAL$$.getAdserverTargeting', arguments);
-  return targeting.getAllTargeting(adUnitCode);
+  // BIDBARREL-SPEC ::: adding opts param
+  return targeting.getAllTargeting(adUnitCode, undefined, targeting.getBidsReceived(), undefined, undefined, opts);
+  //return targeting.getAllTargeting(adUnitCode);
 };
 
 pbjsInstance.getConsentMetadata = function () {
@@ -500,7 +505,15 @@ pbjsInstance.setTargetingForGPTAsync = function (adUnit, customSlotMatching) {
     logError('window.googletag is not defined on the page');
     return;
   }
-  targeting.setTargetingForGPT(adUnit, customSlotMatching);
+  // BIDBARREL-SPEC ::: using lines from pre-v9.0.0 and adding opts param so it flows through BB BidCache
+  let targetingSet = targeting.getAllTargeting(adUnit, undefined, targeting.getBidsReceived(), undefined, undefined, {
+    forTargeting: true
+  });
+  targeting.resetPresetTargeting(adUnit, customSlotMatching);
+  targeting.setTargetingForGPT(targetingSet, customSlotMatching);
+
+  // BIDBARREL-SPEC ::: commenting out the following line which was added in v9.0.0 when the above lines were removed
+  // targeting.setTargetingForGPT(adUnit, customSlotMatching);
 };
 
 /**

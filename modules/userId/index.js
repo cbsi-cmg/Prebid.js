@@ -718,6 +718,8 @@ export const startAuctionHook = timedAuctionHook('userId', function requestBidsH
   ]).then(() => {
     addIdData(reqBidsConfigObj);
     uidMetrics().join(useMetrics(reqBidsConfigObj.metrics), {propagate: false, includeGroups: true});
+    // BIDBARREL-SPEC ::: Fire USERIDS_ADDED event
+    events.emit(EVENTS.USERIDS_ADDED, reqBidsConfigObj.adUnits, initializedSubmodules);
     // calling fn allows prebid to continue processing
     fn.call(this, reqBidsConfigObj);
   });

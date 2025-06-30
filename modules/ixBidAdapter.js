@@ -1642,7 +1642,8 @@ export const spec = {
       if (!includesSize(bid.sizes, ixSize) &&
         !(includesSize(mediaTypeVideoPlayerSize, ixSize)) &&
         !(includesSize(mediaTypeBannerSizes, ixSize))) {
-        logError('IX Bid Adapter: bid size is not included in ad unit sizes or player size.');
+        // BIDBARREL-SPEC ::: Clarified error for IX bid adapter
+        logError(`IX Bid Adapter: bid size(${ixSize}) is not included in ad unit sizes(${mediaTypeBannerSizes}) or player size(${mediaTypeVideoPlayerSize}) or bid sizes (${bid.sizes}).`);
         return false;
       }
     }
