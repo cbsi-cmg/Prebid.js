@@ -33,6 +33,9 @@ import {
   uniques,
 } from './utils.js';
 import { getHighestCpm, getOldestHighestCpmBid } from './utils/reducers.js';
+// BIDBARREL-SPEC ::: import file to override getWinningBids
+// eslint-disable-next-line prebid/validate-imports
+import { bidCache } from '../../core/services/bidCache.js';
 
 var pbTargetingKeys = [];
 
@@ -281,7 +284,8 @@ export function newTargeting(auctionManager) {
    * @param {string=} adUnitCode
    * @return {Object.<string,targeting>} targeting
    */
-  targeting.getAllTargeting = function(adUnitCode, bidLimit, bidsReceived, winReducer = getHighestCpm, winSorter = sortByHighestCpm) {
+  // BIDBARREL-SPEC ::: adding opts param
+  targeting.getAllTargeting = function(adUnitCode, bidLimit, bidsReceived, winReducer = getHighestCpm, winSorter = sortByHighestCpm, opts = { forTargeting: false }) {
     bidsReceived ||= getBidsReceived(winReducer, winSorter);
     const adUnitCodes = getAdUnitCodes(adUnitCode);
     const sendAllBids = config.getConfig('enableSendAllBids');
@@ -289,7 +293,9 @@ export function newTargeting(auctionManager) {
     const adUnitBidLimit = (sendAllBids && (bidLimit || bidLimitConfigValue)) || 0;
     const { customKeysByUnit, filteredBids } = getfilteredBidsAndCustomKeys(adUnitCodes, bidsReceived);
     const bidsSorted = getHighestCpmBidsFromBidPool(filteredBids, winReducer, adUnitBidLimit, undefined, winSorter);
-    let targeting = getTargetingLevels(bidsSorted, customKeysByUnit, adUnitCodes);
+     // BIDBARREL-SPEC ::: adding opts param
+    let targeting = getTargetingLevels(bidsSorted, customKeysByUnit, adUnitCodes, opts);
+    // let targeting = getTargetingLevels(bidsSorted, customKeysByUnit, adUnitCodes);
 
     const defaultKeys = Object.keys(Object.assign({}, DEFAULT_TARGETING_KEYS, NATIVE_KEYS));
     let allowedKeys = config.getConfig(CFG_ALLOW_TARGETING_KEYS);
@@ -336,10 +342,12 @@ export function newTargeting(auctionManager) {
     });
   }
 
-  function getTargetingLevels(bidsSorted, customKeysByUnit, adUnitCodes) {
+  // BIDBARREL-SPEC ::: adding opts param
+  function getTargetingLevels(bidsSorted, customKeysByUnit, adUnitCodes, opts = { forTargeting: false }) {
     const useAllBidsCustomTargeting = config.getConfig('targetingControls.allBidsCustomTargeting') !== false;
 
-    const targeting = getWinningBidTargeting(bidsSorted, adUnitCodes)
+    // BIDBARREL-SPEC ::: adding opts param
+    const targeting = getWinningBidTargeting(bidsSorted, adUnitCodes, opts)
       .concat(getBidderTargeting(bidsSorted))
       .concat(getAdUnitTargeting(adUnitCodes));
 
@@ -564,8 +572,13 @@ export function newTargeting(auctionManager) {
       return bids;
     }, []);
 
-    return getHighestCpmBidsFromBidPool(bidsReceived, winReducer, undefined, undefined, undefined, winSorter);
+    // BIDBARREL-SPEC ::: returning bidsReceived instead of what is returned by getHighestCpmBidsFromBidPool
+    return bidsReceived;
+    // return getHighestCpmBidsFromBidPool(bidsReceived, winReducer, undefined, undefined, undefined, winSorter);
   }
+
+  // BIDBARREL-SPEC ::: assigning the getBidsReceived function to the targeting object
+  targeting.getBidsReceived = getBidsReceived;
 
   /**
    * Returns top bids for a given adUnit or set of adUnits.
@@ -575,18 +588,22 @@ export function newTargeting(auctionManager) {
    * @param  {function(Array<Object>): Array<Object>} [winSorter = sortByHighestCpm] - sorter method
    * @return {Array<Object>} - An array of winning bids.
    */
-  targeting.getWinningBids = function(adUnitCode, bids, winReducer = getHighestCpm, winSorter = sortByHighestCpm) {
+  // BIDBARREL-SPEC ::: adding evalOptions param
+  targeting.getWinningBids = function(adUnitCode, bids, winReducer = getHighestCpm, winSorter = sortByHighestCpm, evalOptions = {forTargeting: false}) {
     const bidsReceived = bids || getBidsReceived(winReducer, winSorter);
     const adUnitCodes = getAdUnitCodes(adUnitCode);
 
-    return bidsReceived
-      .filter(bid => adUnitCodes.includes(bid.adUnitCode))
-      .filter(bid => (bidderSettings.get(bid.bidderCode, 'allowZeroCpmBids') === true) ? bid.cpm >= 0 : bid.cpm > 0)
-      .map(bid => bid.adUnitCode)
-      .filter(uniques)
-      .map(adUnitCode => bidsReceived
-        .filter(bid => bid.adUnitCode === adUnitCode ? bid : null)
-        .reduce(getHighestCpm));
+    // BIDBARREL-SPEC ::: calling our bidCache service instead of returning the bidsReceived below
+    return bidCache.evaluateWinningBids(adUnitCodes, bidsReceived, evalOptions);
+    // BIDBARREL-SPEC ::: commenting out the lines below in favor of our bidCache service above
+    // return bidsReceived
+    //   .filter(bid => adUnitCodes.includes(bid.adUnitCode))
+    //   .filter(bid => (bidderSettings.get(bid.bidderCode, 'allowZeroCpmBids') === true) ? bid.cpm >= 0 : bid.cpm > 0)
+    //   .map(bid => bid.adUnitCode)
+    //   .filter(uniques)
+    //   .map(adUnitCode => bidsReceived
+    //     .filter(bid => bid.adUnitCode === adUnitCode ? bid : null)
+    //     .reduce(getHighestCpm));
   };
 
   /**
@@ -627,8 +644,11 @@ export function newTargeting(auctionManager) {
    * @param {string[]} adUnitCodes code array
    * @return {targetingArray} winning bids targeting
    */
-  function getWinningBidTargeting(bidsReceived, adUnitCodes) {
-    let winners = targeting.getWinningBids(adUnitCodes, bidsReceived);
+  // BIDBARREL-SPEC ::: adding opts param
+  function getWinningBidTargeting(bidsReceived, adUnitCodes, opts = { forTargeting: false }) {
+    // BIDBARREL-SPEC ::: adding opts param
+    let winners = targeting.getWinningBids(adUnitCodes, bidsReceived, undefined, undefined, opts);
+    // let winners = targeting.getWinningBids(adUnitCodes, bidsReceived);
     let standardKeys = getStandardKeys();
 
     winners = winners.map(winner => {

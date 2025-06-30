@@ -1,5 +1,8 @@
 import {config} from './config.js';
 import {klona} from 'klona/json';
+// BIDBARREL-SPEC ::: add BB logger to unify logging messages
+// eslint-disable-next-line prebid/validate-imports
+import {logger as createLogger} from '../../core/utilities/logger.js';
 
 import {EVENTS} from './constants.js';
 import {PbPromise} from './utils/promise.js';
@@ -83,6 +86,30 @@ export function resetWinDimensions() {
       },
     }
   };
+}
+
+/**
+ * Wrappers to console.(log | info | warn | error). Takes N arguments, the same as the native methods
+ */
+// BIDBARREL-SPEC ::: Override logger functions and add to console
+const logger = createLogger({name: 'Prebid', bgColor: '#3b88c3', textColor: '#FFF'}).atVerbosity(3);
+function addBidderInfo() {
+  const bidder = config.getCurrentBidder();
+  return (bidder ? `${bidder}: ` : '');
+}
+export const logMessage = function(...args) {
+  logger.logMessage(addBidderInfo(), ...args);
+}
+export const logInfo = function(...args) {
+  logger.logInfo(addBidderInfo(), ...args);
+}
+export const logWarn = function(...args) {
+  logger.logWarn(addBidderInfo(), ...args);
+  emitEvent(EVENTS.AUCTION_DEBUG, {type: 'WARNING', arguments: arguments});
+}
+export const logError = function(...args) {
+  logger.logError(addBidderInfo(), ...args);
+  emitEvent(EVENTS.AUCTION_DEBUG, { type: 'ERROR', arguments: arguments });
 }
 
 // this allows stubbing of utility functions that are used internally by other utility functions
@@ -264,38 +291,39 @@ export function canAccessWindowTop() {
   }
 }
 
+// BIDBARREL-SPEC ::: comment out Prebid.js functions for log errors in favor of BB log functions above
 /**
  * Wrappers to console.(log | info | warn | error). Takes N arguments, the same as the native methods
  */
-export function logMessage() {
-  if (debugTurnedOn() && consoleLogExists) {
-    // eslint-disable-next-line no-console
-    console.log.apply(console, decorateLog(arguments, 'MESSAGE:'));
-  }
-}
+// export function logMessage() {
+//   if (debugTurnedOn() && consoleLogExists) {
+//     // eslint-disable-next-line no-console
+//     console.log.apply(console, decorateLog(arguments, 'MESSAGE:'));
+//   }
+// }
 
-export function logInfo() {
-  if (debugTurnedOn() && consoleInfoExists) {
-    // eslint-disable-next-line no-console
-    console.info.apply(console, decorateLog(arguments, 'INFO:'));
-  }
-}
+// export function logInfo() {
+//   if (debugTurnedOn() && consoleInfoExists) {
+//     // eslint-disable-next-line no-console
+//     console.info.apply(console, decorateLog(arguments, 'INFO:'));
+//   }
+// }
 
-export function logWarn() {
-  if (debugTurnedOn() && consoleWarnExists) {
-    // eslint-disable-next-line no-console
-    console.warn.apply(console, decorateLog(arguments, 'WARNING:'));
-  }
-  emitEvent(EVENTS.AUCTION_DEBUG, { type: 'WARNING', arguments: arguments });
-}
+// export function logWarn() {
+//   if (debugTurnedOn() && consoleWarnExists) {
+//     // eslint-disable-next-line no-console
+//     console.warn.apply(console, decorateLog(arguments, 'WARNING:'));
+//   }
+//   emitEvent(EVENTS.AUCTION_DEBUG, { type: 'WARNING', arguments: arguments });
+// }
 
-export function logError() {
-  if (debugTurnedOn() && consoleErrorExists) {
-    // eslint-disable-next-line no-console
-    console.error.apply(console, decorateLog(arguments, 'ERROR:'));
-  }
-  emitEvent(EVENTS.AUCTION_DEBUG, { type: 'ERROR', arguments: arguments });
-}
+// export function logError() {
+//   if (debugTurnedOn() && consoleErrorExists) {
+//     // eslint-disable-next-line no-console
+//     console.error.apply(console, decorateLog(arguments, 'ERROR:'));
+//   }
+//   emitEvent(EVENTS.AUCTION_DEBUG, { type: 'ERROR', arguments: arguments });
+// }
 
 export function prefixLog(prefix) {
   function decorate(fn) {
@@ -304,29 +332,34 @@ export function prefixLog(prefix) {
     }
   }
   return {
-    logError: decorate(logError),
-    logWarn: decorate(logWarn),
-    logMessage: decorate(logMessage),
-    logInfo: decorate(logInfo),
+    // BIDBARREL-SPEC ::: comment out Prebid.js functions for log errors in favor of BB log functions below
+    // logError: decorate(logError),
+    // logWarn: decorate(logWarn),
+    // logMessage: decorate(logMessage),
+    // logInfo: decorate(logInfo),
+    logError: logError,
+    logWarn: logWarn,
+    logMessage: logMessage,
+    logInfo: logInfo,
   }
 }
+// BIDBARREL-SPEC ::: comment out Prebid.js function decorateLog in favor of BB log functions above
+// function decorateLog(args, prefix) {
+//   args = [].slice.call(args);
+//   let bidder = config.getCurrentBidder();
 
-function decorateLog(args, prefix) {
-  args = [].slice.call(args);
-  let bidder = config.getCurrentBidder();
+//   prefix && args.unshift(prefix);
+//   if (bidder) {
+//     args.unshift(label('#aaa'));
+//   }
+//   args.unshift(label('#3b88c3'));
+//   args.unshift('%cPrebid' + (bidder ? `%c${bidder}` : ''));
+//   return args;
 
-  prefix && args.unshift(prefix);
-  if (bidder) {
-    args.unshift(label('#aaa'));
-  }
-  args.unshift(label('#3b88c3'));
-  args.unshift('%cPrebid' + (bidder ? `%c${bidder}` : ''));
-  return args;
-
-  function label(color) {
-    return `display: inline-block; color: #fff; background: ${color}; padding: 1px 4px; border-radius: 3px;`
-  }
-}
+//   function label(color) {
+//     return `display: inline-block; color: #fff; background: ${color}; padding: 1px 4px; border-radius: 3px;`
+//   }
+// }
 
 export function hasConsoleLogger() {
   return consoleLogExists;
