@@ -405,8 +405,8 @@ pbjsInstance.getHighestUnusedBidResponseForAdUnitCode = function (adunitCode) {
 // BIDBARREL-SPEC ::: adding opts param
 pbjsInstance.getAdserverTargetingForAdUnitCode = function (adUnitCode, opts = {forTargeting: false}) {
   // BIDBARREL-SPEC ::: adding opts param
-  return targeting.getAllTargeting(adUnitCode, undefined, targeting.getBidsReceived(), undefined, undefined, opts);
-  //return pbjsInstance.getAdserverTargeting(adUnitCode)[adUnitCode];
+  return pbjsInstance.getAdserverTargeting(adUnitCode, opts)[adUnitCode];
+    //return pbjsInstance.getAdserverTargeting(adUnitCode)[adUnitCode];
 };
 
 /**
